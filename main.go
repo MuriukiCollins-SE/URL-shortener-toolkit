@@ -3,11 +3,11 @@ package main
 import (
 	"crypto/rand"
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"log"
 	"math/big"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -15,21 +15,24 @@ import (
 
 // ========================== CONFIG ==========================
 const (
-	port            = ":8080"
 	shortCodeLength = 7
 	characters      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
 var (
-	// In-memory store
 	urlStore = make(map[string]string)
 	mu       sync.RWMutex
 
-	// Point to YOUR actual template location
+	listenAddr = func() string {
+		if port := os.Getenv("PORT"); port != "" {
+			return "0.0.0.0:" + port
+		}
+		return ":8080"
+	}()
+
 	tmpl = template.Must(template.ParseFiles("Templates/index.html"))
 
-	// URL validation
-	validURLRegex = regexp.MustCompile(`^(https?://)?[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$|^(https?://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$`)
+	validURLRegex = regexp.MustCompile(`^(https?://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$`)
 	schemeRegex   = regexp.MustCompile(`^https?://`)
 )
 
@@ -44,7 +47,7 @@ func generateShortCode() string {
 		candidate := string(code)
 
 		mu.RLock()
-		if urlStore[candidate] != "" {
+		if _, exists := urlStore[candidate]; exists {
 			mu.RUnlock()
 			continue
 		}
@@ -72,14 +75,14 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	longURL := r.FormValue("url")
+	longURL := strings.TrimSpace(r.FormValue("url"))
 	if longURL == "" {
 		http.Error(w, "Missing URL", http.StatusBadRequest)
 		return
 	}
 
 	if !validURLRegex.MatchString(longURL) {
-		http.Error(w, "Invalid URL format", http.StatusBadRequest)
+		http.Error(w, "Invalid URL – try google.com or https://youtube.com", http.StatusBadRequest)
 		return
 	}
 	if !schemeRegex.MatchString(longURL) {
@@ -91,40 +94,27 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	urlStore[shortCode] = longURL
 	mu.Unlock()
 
-	// Build short link using the request host + scheme (works on Render / deployed hosts)
+	// THE ONLY CHANGE — smart protocol detection
 	scheme := "http"
-	if r.TLS != nil {
+	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
 		scheme = "https"
 	}
-	if proto := r.Header.Get("X-Forwarded-Proto"); proto != "" {
-		scheme = proto
-	}
-	host := r.Host
-	shortLink := fmt.Sprintf("%s://%s/%s", scheme, host, shortCode)
+	shortLink := scheme + "://" + r.Host + "/" + shortCode
 
 	if r.Header.Get("Accept") == "application/json" {
-		json.NewEncoder(w).Encode(map[string]string{
-			"short": shortLink,
-			"long":  longURL,
-		})
+		json.NewEncoder(w).Encode(map[string]string{"short": shortLink, "long": longURL})
 		return
 	}
 
-	data := struct {
-		ShortLink string
-		LongURL   string
-	}{shortLink, longURL}
+	data := struct{ ShortLink, LongURL string }{shortLink, longURL}
 	tmpl.Execute(w, data)
 }
 
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
-	// Normalize path and trim any leading/trailing slashes
-	shortCode := strings.Trim(r.URL.Path, "/")
-	if shortCode == "" {
-		// no code => treat as homepage
-		homeHandler(w, r)
+	if r.URL.Path == "/" {
 		return
 	}
+	shortCode := strings.TrimPrefix(r.URL.Path, "/")
 
 	mu.RLock()
 	longURL, ok := urlStore[shortCode]
@@ -140,10 +130,8 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 
 // ========================== MAIN ==========================
 func main() {
-	// Serve CSS from Templates/css/
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("Templates/css"))))
 
-	// Routes
 	http.HandleFunc("/shorten", shortenHandler)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
@@ -153,14 +141,10 @@ func main() {
 		}
 	})
 
-	log.Println("")
-	log.Println("GoShort URL Shortener is LIVE!")
-	log.Printf("Open → http://localhost%s", port)
-	log.Println("Stunning design loaded from Templates/ + Templates/css/style.css")
-	log.Println("Press Ctrl+C to stop")
-	log.Println("")
+	log.Println("GoShort by Collins Muriuki — LIVE!")
+	log.Printf("Local → http://localhost:8080")
+	log.Printf("Deployed → https://url-shortener-toolkit.onrender.com")
+	log.Printf("Listening on %s", listenAddr)
 
-	if err := http.ListenAndServe(port, nil); err != nil {
-		log.Fatalf("Server failed: %v", err)
-	}
+	log.Fatal(http.ListenAndServe(listenAddr, nil))
 }
