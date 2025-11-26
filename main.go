@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"net/http"
 	"regexp"
+	"strings"
 	"sync"
 )
 
@@ -90,7 +91,16 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	urlStore[shortCode] = longURL
 	mu.Unlock()
 
-	shortLink := fmt.Sprintf("http://localhost%s/%s", port, shortCode)
+	// Build short link using the request host + scheme (works on Render / deployed hosts)
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	if proto := r.Header.Get("X-Forwarded-Proto"); proto != "" {
+		scheme = proto
+	}
+	host := r.Host
+	shortLink := fmt.Sprintf("%s://%s/%s", scheme, host, shortCode)
 
 	if r.Header.Get("Accept") == "application/json" {
 		json.NewEncoder(w).Encode(map[string]string{
@@ -108,10 +118,13 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/" {
+	// Normalize path and trim any leading/trailing slashes
+	shortCode := strings.Trim(r.URL.Path, "/")
+	if shortCode == "" {
+		// no code => treat as homepage
+		homeHandler(w, r)
 		return
 	}
-	shortCode := r.URL.Path[1:]
 
 	mu.RLock()
 	longURL, ok := urlStore[shortCode]
