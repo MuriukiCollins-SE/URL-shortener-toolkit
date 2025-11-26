@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>GoShort • URL Shortener built with Go & GenAI</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+</head>
+<body>
+    <div class="particles"></div>
+
+    <div class="container">
+        <header class="header">
+            <h1>GoShort</h1>
+            <p>Lightning-fast URL shortener built with pure Go & Generative AI</p>
+        </header>
+
+        <main class="main-content">
+            <form id="shortenForm" action="/shorten" method="POST">
+                <div class="input-wrapper">
+                    <input type="text" name="url" placeholder="Paste your long URL here..." required autofocus />
+                    <button type="submit" class="shorten-btn">
+                        Shorten
+                    </button>
+                </div>
+            </form>
+
+            {{if .ShortLink}}
+            <div class="result-card">
+                <div class="success-icon">Check</div>
+                <p>Your shortened URL is ready!</p>
+                <div class="short-url">
+                    <a href="{{.ShortLink}}" target="_blank">{{.ShortLink}}</a>
+                </div>
+                <button onclick="copyToClipboard('{{.ShortLink}}')" class="copy-btn">
+                    Copy
+                </button>
+                <small>Original → {{.LongURL}}</small>
+            </div>
+            {{end}}
+        </main>
+
+        <footer class="footer">
+            Built with Go • Powered by Generative AI • Moringa AI Capstone 2025
+        </footer>
+    </div>
+
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            const btn = event.target;
+            btn.textContent = "Copied!";
+            btn.style.background = "#10b981";
+            setTimeout(() => {
+                btn.textContent = "Copy";
+                btn.style.background = "";
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
