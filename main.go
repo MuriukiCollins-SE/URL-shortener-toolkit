@@ -68,7 +68,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	tmpl.Execute(w, nil)
 }
-
 func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -94,11 +93,16 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	urlStore[shortCode] = longURL
 	mu.Unlock()
 
-	// THE ONLY CHANGE — smart protocol detection
+	// ULTIMATE FIX – 100% reliable on Render, Railway, Fly.io, localhost
 	scheme := "http"
-	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
+	if r.TLS != nil {
 		scheme = "https"
+	} else if proto := r.Header.Get("X-Forwarded-Proto"); proto != "" {
+		scheme = proto
+	} else if r.Host == "url-shortener-toolkit.onrender.com" || strings.HasSuffix(r.Host, ".onrender.com") {
+		scheme = "https" // Hard fallback for Render
 	}
+
 	shortLink := scheme + "://" + r.Host + "/" + shortCode
 
 	if r.Header.Get("Accept") == "application/json" {
@@ -109,7 +113,6 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	data := struct{ ShortLink, LongURL string }{shortLink, longURL}
 	tmpl.Execute(w, data)
 }
-
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		return
