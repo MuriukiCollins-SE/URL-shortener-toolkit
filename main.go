@@ -23,6 +23,7 @@ var (
 	urlStore = make(map[string]string)
 	mu       sync.RWMutex
 
+	// Auto-detect port for Render / localhost
 	listenAddr = func() string {
 		if port := os.Getenv("PORT"); port != "" {
 			return "0.0.0.0:" + port
@@ -68,6 +69,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	tmpl.Execute(w, nil)
 }
+
 func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -93,26 +95,36 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	urlStore[shortCode] = longURL
 	mu.Unlock()
 
-	// ULTIMATE FIX – 100% reliable on Render, Railway, Fly.io, localhost
-	scheme := "http"
+	// FINAL BULLETPROOF PROTOCOL DETECTION
+	scheme := "http" // default for localhost
+
+	// 1. Direct TLS connection (very rare in dev)
 	if r.TLS != nil {
 		scheme = "https"
-	} else if proto := r.Header.Get("X-Forwarded-Proto"); proto != "" {
+	}
+	// 2. Proxy header (most common on Render, Railway, etc.)
+	if proto := r.Header.Get("X-Forwarded-Proto"); proto != "" {
 		scheme = proto
-	} else if r.Host == "url-shortener-toolkit.onrender.com" || strings.HasSuffix(r.Host, ".onrender.com") {
-		scheme = "https" // Hard fallback for Render
+	}
+	// 3. Hard fallback for Render (100% reliable)
+	if strings.Contains(r.Host, "onrender.com") || strings.Contains(r.Host, "render.com") {
+		scheme = "https"
 	}
 
 	shortLink := scheme + "://" + r.Host + "/" + shortCode
 
 	if r.Header.Get("Accept") == "application/json" {
-		json.NewEncoder(w).Encode(map[string]string{"short": shortLink, "long": longURL})
+		json.NewEncoder(w).Encode(map[string]string{
+			"short": shortLink,
+			"long":  longURL,
+		})
 		return
 	}
 
 	data := struct{ ShortLink, LongURL string }{shortLink, longURL}
 	tmpl.Execute(w, data)
 }
+
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		return
@@ -145,8 +157,8 @@ func main() {
 	})
 
 	log.Println("GoShort by Collins Muriuki — LIVE!")
-	log.Printf("Local → http://localhost:8080")
-	log.Printf("Deployed → https://url-shortener-toolkit.onrender.com")
+	log.Println("Local → http://localhost:8080")
+	log.Println("Deployed → https://url-shortener-toolkit.onrender.com")
 	log.Printf("Listening on %s", listenAddr)
 
 	log.Fatal(http.ListenAndServe(listenAddr, nil))
