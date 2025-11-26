@@ -3,7 +3,7 @@
 
 **Collins Muriuki** 
 
-![GoShort Preview](https://url-shortener-toolkit-1.onrender.com/screenshot.png)  
+![GoShort Preview](Screenshot%20from%202025-11-26%2016-32-21.png)  
 *(Live screenshot of the url-shortener)*
 
 ---
