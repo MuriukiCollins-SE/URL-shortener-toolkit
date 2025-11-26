@@ -28,7 +28,7 @@ var (
 	tmpl = template.Must(template.ParseFiles("Templates/index.html"))
 
 	// URL validation
-	validURLRegex = regexp.MustCompile(`^(?:https?://)?[^\\s/$.?#].[^\\s]*$`)
+	validURLRegex = regexp.MustCompile(`^(https?://)?[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$|^(https?://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/.*)?$`)
 	schemeRegex   = regexp.MustCompile(`^https?://`)
 )
 
