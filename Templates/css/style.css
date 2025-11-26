@@ -1,0 +1,222 @@
+/* ===== CYBER-FUTURE THEME 2025 ===== */
+:root {
+    --bg: #0d0d1f;
+    --card: rgba(20, 20, 40, 0.7);
+    --text: #e0e7ff;
+    --accent: #00f5ff;
+    --accent-glow: #00f5ff88;
+    --success: #00ff88;
+    --purple: #9d4edd;
+    --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Animated particle background */
+.particles {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at 20% 80%, #1a1a3a 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, #2a1a4a 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+.particles::before {
+    content: '';
+    position: absolute;
+    width: 100%; height: 100%;
+    background: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,245,255,0.03) 35px, rgba(0,245,255,0.03) 70px);
+    animation: drift 60s linear infinite;
+}
+@keyframes drift { 0% { transform: translate(0,0); } 100% { transform: translate(50px, 50px); } }
+
+/* Main container with glassmorphism */
+.container {
+    max-width: 600px;
+    margin: 40px auto;
+    background: var(--card);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0,245,255,0.2);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 100px var(--accent-glow);
+    animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+/* Header */
+.header {
+    background: var(--gradient);
+    padding: 50px 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.header::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: repeating-conic-gradient(from 0deg at 50% 50%, transparent, rgba(255,255,255,0.1) 10deg, transparent 20deg);
+    animation: rotate 20s linear infinite;
+}
+@keyframes rotate { to { transform: rotate(360deg); }}
+.header h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 4rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #fff, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px var(--accent-glow);
+}
+.header p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; }
+
+/* Form */
+.main-content { padding: 50px; }
+.input-wrapper {
+    position: relative;
+    margin-bottom: 30px;
+}
+input[type="text"] {
+    width: 100%;
+    padding: 20px 25px;
+    font-size: 1.1rem;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(0,245,255,0.3);
+    border-radius: 16px;
+    color: white;
+    transition: all 0.4s;
+}
+input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 30px var(--accent-glow);
+    transform: scale(1.02);
+}
+.shorten-btn {
+    position: absolute;
+    right: 8px; top: 8px;
+    padding: 14px 30px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px var(--accent-glow);
+}
+.shorten-btn:hover {
+    background: white;
+    transform: translateY(-3px);
+    box-shadow: 0 0 40px var(--accent);
+}
+
+/* Result card */
+.result-card {
+    background: rgba(0,255,136,0.1);
+    border: 1px solid var(--success);
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+@keyframes popIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.success-icon {
+    font-size: 4rem;
+    color: var(--success);
+    margin-bottom: 20px;
+    animation: bounce 2s infinite;
+}
+@keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+.short-url a {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-shadow: 0 0 20px var(--accent-glow);
+    word-break: break-all;
+}
+.copy-btn {
+    margin: 20px auto;
+    padding: 14px 40px;
+    background: var(--success);
+    color: black;
+    border: none;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.copy-btn:hover { transform: scale(1.1); box-shadow: 0 0 30px var(--success); }
+
+/* Footer */
+/* BEAUTIFUL, HIGH-CONTRAST, ELEGANT FOOTER */
+.footer {
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 80px;
+    background: rgba(10, 10, 30, 0.95);
+    border-top: 1px solid rgba(0, 245, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.footer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, 
+        #00f5ff, #7000ff, #ff00b8, #00ff88, #00f5ff);
+    background-size: 200% 200%;
+    animation: shimmer 6s linear infinite;
+}
+
+.footer-text {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #ffffff;
+    text-shadow: 
+        0 0 10px rgba(0, 245, 255, 0.6),
+        0 0 20px rgba(0, 245, 255, 0.4);
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #00f5ff, #ffffff, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gentleGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes shimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+@keyframes gentleGlow {
+    from { 
+        text-shadow: 0 0 10px rgba(0, 245, 255, 0.6), 0 0 20px rgba(0, 245, 255, 0.4);
+    }
+    to { 
+        text-shadow: 0 0 20px rgba(0, 245, 255, 0.9), 0 0 40px rgba(0, 245, 255, 0.6);
+    }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .header h1 { font-size: 3rem; }
+    .main-content { padding: 30px; }
+}
